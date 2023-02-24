@@ -1,0 +1,13 @@
+{
+    "AccessKeyID": "AKIAQL6AAJ62SU3E4WMV", 
+    "SecretAccessKey": "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", 
+    "region": "us-east-1",
+    "InputS3": "cse546-input-s3",
+    "InputS3URL": "https://cse546-input-s3.s3.amazonaws.com/images/",
+    "OutputS3": "cse546-output-s3",
+    "OutputS3URL": "https://cse546-output-s3.s3.amazonaws.com/output/",
+    "RequestSQS": "cse546-request-sqs",
+    "ResponseSQS": "cse546-response-sqs", 
+    "AccountID": "025635606453"
+}
+

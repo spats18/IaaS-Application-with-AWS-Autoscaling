@@ -31,9 +31,17 @@
  
 
 ### Node JS Code Checkpoints
-#### Commands to run the server
+#### Commands to run the Frontend server
 ```
 node server.js
 ```
+#### Commands to run workload generator
+```
+python3 workload_generator.py --num_request 1 --url "http://44.213.107.237:3001/api/image" --image_folder  "test_images\\" 
+#  for windows 
+```
 
-
+#### Commands to run the Backend server
+```
+python3 script.py
+``` 

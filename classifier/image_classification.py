@@ -21,8 +21,8 @@ def classify(imageLocation):
     outputs = model(img_tensor)
     _, predicted = torch.max(outputs.data, 1)
 
-    f = open('./imagenet-labels.json')
-    labels = json.load(f)
+    with open('./imagenet-labels.json') as f:
+        labels = json.load(f)
     result = labels[np.array(predicted)[0]]
     img_name = imageLocation.split("/")[1]
     #save_name = f"({img_name}, {result})"
