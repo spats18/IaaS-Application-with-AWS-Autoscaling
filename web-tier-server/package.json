@@ -2,10 +2,11 @@
   "name": "nodejs-server",
   "version": "1.0.0",
   "description": "",
-  "main": "web-tier-server.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node web-tier-server.js"
+    "run": "node server.js",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",

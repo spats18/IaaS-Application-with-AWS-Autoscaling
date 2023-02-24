@@ -30,5 +30,10 @@
 7. Send the custom message to SQS response
  
 
+### Node JS Code Checkpoints
+#### Commands to run the server
+```
+node server.js
+```
 
 
