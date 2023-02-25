@@ -47,7 +47,11 @@ const sqsApplication = Consumer.create({
     ],
     VisibilityTimeout: 20,
     WaitTimeSeconds: 10
+<<<<<<< HEAD
 });
+=======
+    });
+>>>>>>> origin
 sqsApplication.start();
 
 function logMessage(id, inputBucketKey){ //custom message object 
