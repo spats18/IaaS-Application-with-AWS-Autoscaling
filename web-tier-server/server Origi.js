@@ -5,35 +5,37 @@ import cors from 'cors';
 import fileupload from "express-fileupload";
 import { Consumer } from 'sqs-consumer';
 
+dotenv.config({path: '../key.env'})
+const application = express()
+// dotenv.config()
 
-AWS.config.update({ region: 'us-east-1' });
-dotenv.config({ path: '../key.env' });
-const application = express();
-
-application.use(cors({ origin: '*' }));
+application.use(cors({
+    origin: '*'
+}));
 application.use(fileupload());
 
-const awsKey = process.env.AWS_KEY;
-const awsSecKey = process.env.AWS_SECRET;
-
-const s3 = new AWS.S3({
-    accessKeyId: awsKey,
-    secretAccessKey: awsSecKey
-});
-
-const SQS = new AWS.SQS({
-    apiVersion: '2012-11-05', 
-    accessKeyId: awsKey,
-    secretAccessKey: awsSecKey
-});
-
+// map [uniqueID, classification_result]
 const result = new Map();
 
-//A SQS consumer instance is created to listen to the SQS queue for the response message from the classification service.
+AWS.config.update({region: 'us-east-1'}); // AWS region
+
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_KEY, //env variables for AWS secret Key and Access ID
+    secretAccessKey: process.env.AWS_SECRET
+})
+
+var logMessage = function(id, name) { //custom message object 
+    this.id = id;
+    this.name = name;
+}
+
+const SQS = new AWS.SQS({apiVersion: '2012-11-05',accessKeyId: process.env.AWS_KEY,
+    secretAccessKey: process.env.AWS_SECRET})
+    
 const sqsApplication = Consumer.create({
-    queueUrl: 'https://sqs.us-east-1.amazonaws.com/025635606453/cse546-response-sqs', 
-    handleMessage: async (message) => {
-        var mess = JSON.parse(message.Body)
+    queueUrl: 'https://sqs.us-east-1.amazonaws.com/025635606453/cse546-response-sqs', // response SQS
+    handleMessage: async (data) => {
+        var mess = JSON.parse(data.Body)
         console.log("Message received: " + mess.id)
         result.set(mess.id, mess.classification)
     },
@@ -45,19 +47,14 @@ const sqsApplication = Consumer.create({
     MessageAttributeNames: [
         "All"
     ],
-    VisibilityTimeout: 20,
-    WaitTimeSeconds: 10
-});
+    // VisibilityTimeout: 20,
+     WaitTimeSeconds: 10
+    });
 sqsApplication.start();
 
-function logMessage(id, inputBucketKey){ //custom message object 
-    this.id = id;
-    this.inputBucketKey = inputBucketKey;
-}
-
-application.post('/api/image', async (request, response) => {
+application.post('/api/image', async(request, response) => {
     // unique ID for the image
-    var id = (await import("nanoid")); // unique ID generated for image
+    var id = require("shortid").generate(); // unique ID generated for image
     //upload image to S3
     let inputBucketKey = "demo-test-input_" + request.files.myfile.name; // custom prefix for input images in bucket (like folder)
     const parameters = {
@@ -67,8 +64,8 @@ application.post('/api/image', async (request, response) => {
     }
 
     await s3.upload(parameters).promise()
-    console.log(inputBucketKey + " image uploaded to S3.");
-
+    console.log(inputBucketKey+" image uploaded to S3.");
+    
     // sending request to SQS
     const message = {
         DelaySeconds: 0,
@@ -77,10 +74,10 @@ application.post('/api/image', async (request, response) => {
     };
 
     await SQS.sendMessage(message).promise()
-    console.log("Message for " + inputBucketKey + " sent to SQS.");
-
-    result.set(id, "");
-
+    console.log("Message for "+inputBucketKey+" sent to SQS.");
+    
+    result.set(id,"");
+    
     await waitUntilKeyPresent(id, 0)
 
     //sending result 
@@ -89,16 +86,14 @@ application.post('/api/image', async (request, response) => {
 
 const sleep = millisec => new Promise(resolve => setTimeout(resolve, millisec));
 
-const waitUntilKeyPresent = async (key, retry) => {
-    while(retry < 400){
-        if(result.get(key) != "")
-            break;
+const waitUntilKeyPresent = async(key, retry) => {
+    while (result.get(key) == "" && retry < 400) {
         retry++;
         await sleep(1000);
     }
     console.log('key present: ' + key)
 }
 
-application.listen(3001, "0.0.0.0", () => {
+application.listen(3001, "0.0.0.0", () => { // changed to 0.0.0.0
     console.log(`Server running on 3001`)
 })
