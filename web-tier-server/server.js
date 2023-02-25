@@ -7,16 +7,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { Consumer } from 'sqs-consumer';
 
 dotenv.config({path: '../key.env'})
-const app = express()
+const application = express()
 // dotenv.config()
 
-app.use(cors({
-    origin: '*'
-}));
-app.use(fileupload());
+application.use(cors({origin: '*'}));
+application.use(fileupload());
 
 // map [uniqueID, classification_result]
-const map = new Map();
+const result = new Map();
 
 AWS.config.update({region: 'us-east-1'}); // AWS region
 
@@ -38,7 +36,7 @@ const sqsApp = Consumer.create({
     handleMessage: async (data) => {
         var message = JSON.parse(data.Body)
         console.log("Message received: " + message.id)
-        map.set(message.id, message.classification)
+        result.set(message.id, message.classification)
     },
     sqs: SQS,
     AttributeNames: [
@@ -53,7 +51,7 @@ const sqsApp = Consumer.create({
     });
 sqsApp.start();
 
-app.post('/api/image', async(req, res) => {
+application.post('/api/image', async(req, res) => {
     // unique ID for the image
     var id = uuidv4(); // unique ID generated for image
     //upload image to S3
@@ -77,24 +75,24 @@ app.post('/api/image', async(req, res) => {
     await SQS.sendMessage(message).promise()
     console.log("Message sent to SQS for " + inputBucketKey);
     
-    map.set(id,"");
+    result.set(id,"");
     
     await waitUntilKeyPresent(id, 0)
 
     //sending result 
-    res.send(map.get(id))
+    res.send(result.get(id))
 })
 
 const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const waitUntilKeyPresent = async(key, retryCount) => {
-    while (map.get(key) == "" && retryCount < 420) {
+    while (result.get(key) == "" && retryCount < 420) {
         retryCount++;
         await snooze(1000);
     }
     console.log('key present: ' + key)
 }
 
-app.listen(3001, "0.0.0.0", () => { // changed to 0.0.0.0
+application.listen(3001, "0.0.0.0", () => { // changed to 0.0.0.0
     console.log(`Server running on 3001`)
 })
