@@ -3,7 +3,6 @@ import express from 'express';
 import AWS from 'aws-sdk';
 import cors from 'cors';
 import fileupload from "express-fileupload";
-import { v4 as uuidv4 } from 'uuid';
 import { Consumer } from 'sqs-consumer';
 
 dotenv.config({path: '../key.env'})
@@ -55,7 +54,7 @@ sqsApplication.start();
 
 application.post('/api/image', async(request, response) => {
     // unique ID for the image
-    var id = uuidv4(); // unique ID generated for image
+    var id = require("shortid").generate(); // unique ID generated for image
     //upload image to S3
     let inputBucketKey = "demo-test-input_" + request.files.myfile.name; // custom prefix for input images in bucket (like folder)
     const parameters = {
@@ -88,7 +87,7 @@ application.post('/api/image', async(request, response) => {
 const sleep = millisec => new Promise(resolve => setTimeout(resolve, millisec));
 
 const waitUntilKeyPresent = async(key, retry) => {
-    while (result.get(key) == "" && retry < 420) {
+    while (result.get(key) == "" && retry < 400) {
         retry++;
         await sleep(1000);
     }
