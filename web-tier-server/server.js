@@ -4,11 +4,13 @@ import AWS from 'aws-sdk';
 import cors from 'cors';
 import fileupload from "express-fileupload";
 import { Consumer } from 'sqs-consumer';
+import { nanoid } from 'nanoid';
 
 
 AWS.config.update({ region: 'us-east-1' });
 dotenv.config({ path: '../key.env' });
 const application = express();
+var PORT = 3001;
 
 application.use(cors({ origin: '*' }));
 application.use(fileupload());
@@ -55,9 +57,9 @@ function logMessage(id, inputBucketKey){ //custom message object
     this.inputBucketKey = inputBucketKey;
 }
 
-application.post('/api/image', async (request, response) => {
+application.post('/postApi/image', async (request, response) => {
     // unique ID for the image
-    var id = (await import("nanoid")); // unique ID generated for image
+    var id = nanoid(); // unique ID generated for image
     //upload image to S3
     let inputBucketKey = "demo-test-input_" + request.files.myfile.name; // custom prefix for input images in bucket (like folder)
     const parameters = {
@@ -99,6 +101,6 @@ const waitUntilKeyPresent = async (key, retry) => {
     console.log('key present: ' + key)
 }
 
-application.listen(3001, "0.0.0.0", () => {
-    console.log(`Server running on 3001`)
+application.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on ` + PORT)
 })
