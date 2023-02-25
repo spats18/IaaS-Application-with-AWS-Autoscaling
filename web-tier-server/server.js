@@ -47,8 +47,8 @@ const sqsApplication = Consumer.create({
     MessageAttributeNames: [
         "All"
     ],
-    // VisibilityTimeout: 20,
-     WaitTimeSeconds: 10
+    VisibilityTimeout: 20,
+    WaitTimeSeconds: 10
     });
 sqsApplication.start();
 
