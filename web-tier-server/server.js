@@ -10,7 +10,9 @@ dotenv.config({path: '../key.env'})
 const application = express()
 // dotenv.config()
 
-application.use(cors({origin: '*'}));
+application.use(cors({
+    origin: '*'
+}));
 application.use(fileupload());
 
 // map [uniqueID, classification_result]
@@ -23,7 +25,7 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_SECRET
 })
 
-var Message = function(id, name) { //custom message object 
+var logMessage = function(id, name) { //custom message object 
     this.id = id;
     this.name = name;
 }
@@ -31,12 +33,12 @@ var Message = function(id, name) { //custom message object
 const SQS = new AWS.SQS({apiVersion: '2012-11-05',accessKeyId: process.env.AWS_KEY,
     secretAccessKey: process.env.AWS_SECRET})
     
-const sqsApp = Consumer.create({
+const sqsApplication = Consumer.create({
     queueUrl: 'https://sqs.us-east-1.amazonaws.com/025635606453/cse546-response-sqs', // response SQS
     handleMessage: async (data) => {
-        var message = JSON.parse(data.Body)
-        console.log("Message received: " + message.id)
-        result.set(message.id, message.classification)
+        var mess = JSON.parse(data.Body)
+        console.log("Message received: " + mess.id)
+        result.set(mess.id, mess.classification)
     },
     sqs: SQS,
     AttributeNames: [
@@ -46,49 +48,49 @@ const sqsApp = Consumer.create({
     MessageAttributeNames: [
         "All"
     ],
-    VisibilityTimeout: 20,
-    WaitTimeSeconds: 10
+    // VisibilityTimeout: 20,
+     WaitTimeSeconds: 10
     });
-sqsApp.start();
+sqsApplication.start();
 
-application.post('/api/image', async(req, res) => {
+application.post('/api/image', async(request, response) => {
     // unique ID for the image
     var id = uuidv4(); // unique ID generated for image
     //upload image to S3
-    let inputBucketKey = "demo-test-input" + req.files.myfile.name; // custom prefix for input images in bucket (like folder)
-    const params = {
+    let inputBucketKey = "demo-test-input_" + request.files.myfile.name; // custom prefix for input images in bucket (like folder)
+    const parameters = {
         Bucket: "cse546-input-s3", // input bucket
         Key: inputBucketKey,
-        Body: req.files.myfile.data
+        Body: request.files.myfile.data
     }
 
-    await s3.upload(params).promise()
-    console.log("Image Uploaded to S3! for " + inputBucketKey);
+    await s3.upload(parameters).promise()
+    console.log(inputBucketKey+" image uploaded to S3.");
     
     // sending request to SQS
     const message = {
         DelaySeconds: 0,
-        MessageBody: JSON.stringify(new Message(id, inputBucketKey)),
+        MessageBody: JSON.stringify(new logMessage(id, inputBucketKey)),
         QueueUrl: 'https://sqs.us-east-1.amazonaws.com/025635606453/cse546-request-sqs' //request sqs
     };
 
     await SQS.sendMessage(message).promise()
-    console.log("Message sent to SQS for " + inputBucketKey);
+    console.log("Message for "+inputBucketKey+" sent to SQS.");
     
     result.set(id,"");
     
     await waitUntilKeyPresent(id, 0)
 
     //sending result 
-    res.send(result.get(id))
+    response.send(result.get(id))
 })
 
-const snooze = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = millisec => new Promise(resolve => setTimeout(resolve, millisec));
 
-const waitUntilKeyPresent = async(key, retryCount) => {
-    while (result.get(key) == "" && retryCount < 420) {
-        retryCount++;
-        await snooze(1000);
+const waitUntilKeyPresent = async(key, retry) => {
+    while (result.get(key) == "" && retry < 420) {
+        retry++;
+        await sleep(1000);
     }
     console.log('key present: ' + key)
 }
