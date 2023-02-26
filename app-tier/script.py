@@ -67,7 +67,6 @@ def classification_process(message):
     download_image(image_name)
     image_path = 'images/' + image_name
     classification_result = image_classification.classify(image_path)
-    send_sqs_message(message['id'], image_name, classification_result)
     return (image_name, classification_result)
 
 
