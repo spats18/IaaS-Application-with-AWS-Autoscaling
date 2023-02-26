@@ -24,7 +24,7 @@ def send_one_request(url, image_path):
     if r.status_code != 200:
         print('sendErr: '+r.url)
     else :
-        image_msg = image_path.split('/')[1] + ' uploaded!'
+        image_msg = image_path.split('\\')[1] + ' uploaded!'
         msg = image_msg + '\n' + 'Classification result: ' + r.text
         print(msg)
 start_time = time.time()

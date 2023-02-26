@@ -1,1 +1,4 @@
 CSE546_Sum22_workload_generator
+backend_script.py
+web-tier-server/package.json
+web-tier-server/package-lock.json
