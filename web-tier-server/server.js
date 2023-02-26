@@ -61,7 +61,7 @@ application.post('/postApi/image', async (request, response) => {
     // unique ID for the image
     var id = nanoid(); // unique ID generated for image
     //upload image to S3
-    let inputBucketKey = "Turing_" + Date.now().toString() + "_" + request.files.myfile.name; // custom prefix for input images in bucket (like folder)
+    let inputBucketKey = "Turing_"+ Date.now().toString() + "_"+ request.files.myfile.name; // custom prefix for input images in bucket (like folder)
     const parameters = {
         Bucket: "cse546-input-s3", // input bucket
         Key: inputBucketKey,
